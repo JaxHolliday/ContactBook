@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using ContactBook.Data;
 using ContactBook.Models;
 using ContactBook.Enums;
+using ContactBook.Services.Interfaces;
 
 namespace ContactBook.Controllers
 {
@@ -17,13 +18,15 @@ namespace ContactBook.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IImageService _imageService;
 
         //injection => injecting objects so that we can benefit from them (methods and etc)
 
-        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager, IImageService imageService)
         {
             _context = context;
             _userManager = userManager;
+            _imageService = imageService;
         }
 
         // GET: Contacts
@@ -84,6 +87,15 @@ namespace ContactBook.Controllers
                 if(contact.Birthdate != null)
                 {
                     contact.Birthdate = DateTime.SpecifyKind(contact.Birthdate.Value, DateTimeKind.Utc);
+                }
+
+                //ADDING IMAGES!!!! file upload!!!
+                if(contact.ImageFile != null)
+                {
+                    //imagefile is being passed to byte[]
+                    //registers content type coming in 
+                    contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
+                    contact.ImageType = contact.ImageFile.ContentType;
                 }
 
                 _context.Add(contact);

@@ -7,16 +7,40 @@ namespace ContactBook.Services
         //extnesions list 
         private readonly string[] suffixes = { "Bytes", "KB", "MB", "GB", "TB", "PB" };
         //in case we dont find anything
-        private readonly string deafaultImage = "img/DefaultContactImage.png";
+        private readonly string defaultImage = "img/DefaultContactImage.png";
 
-        public string ConvertByteArrayToFile(byte[] filedata, string extension)
+        public string ConvertByteArrayToFile(byte[] fileData, string extension)
         {
-            throw new NotImplementedException();
+            if (fileData is null) return defaultImage;
+
+            try
+            {
+                //C# handling conversion of image to string
+                //binary data ==> string
+                string imageBase64Data = Convert.ToBase64String(fileData);
+                return string.Format($"data:{extension};base64,{imageBase64Data}");
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
 
-        public Task<byte[]> ConvertFileToByteArrayAsync(IFormFile file)
+        public async Task<byte[]> ConvertFileToByteArrayAsync(IFormFile file)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using MemoryStream memoryStream = new();
+                await file.CopyToAsync(memoryStream);
+                byte[] byteFile = memoryStream.ToArray();
+                return byteFile;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
     }
 }
