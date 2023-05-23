@@ -2,6 +2,8 @@ using ContactBook.Data;
 using ContactBook.Models;
 using ContactBook.Services;
 using ContactBook.Services.Interfaces;
+using ContactPro.Services;
+using ContactPro.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +23,7 @@ builder.Services.AddControllersWithViews();
 
 //custom services
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IAddressBookService, AddressBookService>();
 
 var app = builder.Build();
 

@@ -11,6 +11,7 @@ using ContactBook.Data;
 using ContactBook.Models;
 using ContactBook.Enums;
 using ContactBook.Services.Interfaces;
+using ContactPro.Services.Interfaces;
 
 namespace ContactBook.Controllers
 {
@@ -19,14 +20,16 @@ namespace ContactBook.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
+        private readonly IAddressBookService _addressBookService;
 
         //injection => injecting objects so that we can benefit from them (methods and etc)
 
-        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager, IImageService imageService)
+        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager, IImageService imageService, IAddressBookService addressBookService)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
+            _addressBookService = addressBookService;
         }
 
         // GET: Contacts
@@ -59,11 +62,15 @@ namespace ContactBook.Controllers
 
         // GET: Contacts/Create
         [Authorize]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Id");
-            //getting list of states from ENUM's then casting it to a list
+            string appUserId = _userManager.GetUserId(User);
+
+            //Viewdata = unstructed data that can be accessed in the view later 
+            //Converts comma'd list into regualr list
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>().ToList());
+            ViewData["CategoryList"] = new MultiSelectList(await _addressBookService.GetUserCategoriesAsync(appUserId), "Id", "Name");
+
             return View();
         }
 
@@ -72,42 +79,47 @@ namespace ContactBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        //bind should match the view form
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Birthdate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,ImageFile")] Contact contact)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,BirthDate,Address,Address2,City,State,ZipCode,Email,PhoneNumber,ImageFile")] Contact contact, List<int> CategoryList)
         {
+            //This is to make sure it isnt validated
             ModelState.Remove("AppUserId");
 
             if (ModelState.IsValid)
             {
-                //get the id of the user who is currently using page or app
+                //getting current user
                 contact.AppUserID = _userManager.GetUserId(User);
-                //getting created date in controller vs using form
                 contact.Created = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc);
 
-                if(contact.Birthdate != null)
+                if (contact.Birthdate != null)
                 {
                     contact.Birthdate = DateTime.SpecifyKind(contact.Birthdate.Value, DateTimeKind.Utc);
                 }
 
-                //ADDING IMAGES!!!! file upload!!!
-                if(contact.ImageFile != null)
+                //IMAGES
+                //File being sent to us [ImageFile]
+                if (contact.ImageFile != null)
                 {
-                    //imagefile is being passed to byte[]
-                    //registers content type coming in 
+                    //Register => 
                     contact.ImageData = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
                     contact.ImageType = contact.ImageFile.ContentType;
                 }
 
                 _context.Add(contact);
                 await _context.SaveChangesAsync();
+
+                //loop over all selected categories
+                foreach (int categoryId in CategoryList)
+                {
+                    await _addressBookService.AddContactToCategoryAsync(categoryId, contact.Id);
+                }
+                //save each category to the contact categories table.
+
+
                 return RedirectToAction(nameof(Index));
             }
 
-            //ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserID);
-            //sending us back to the index vs the page we were just at
             return RedirectToAction(nameof(Index));
         }
-
         // GET: Contacts/Edit/5
         [Authorize]
         public async Task<IActionResult> Edit(int? id)
