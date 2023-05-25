@@ -97,6 +97,7 @@ namespace ContactPro.Services
 
         public async Task<bool> IsContactInCategory(int categoryId, int contactId)
         {
+            //go out and look in db for the contact
             Contact? contact = await _context.Contacts.FindAsync(contactId);
 
             return await _context.Categories
