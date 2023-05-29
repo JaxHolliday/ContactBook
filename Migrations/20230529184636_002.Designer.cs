@@ -3,6 +3,7 @@ using System;
 using ContactBook.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ContactBook.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230529184636_002")]
+    partial class _002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -347,7 +349,7 @@ namespace ContactBook.Migrations
             modelBuilder.Entity("ContactBook.Models.Category", b =>
                 {
                     b.HasOne("ContactBook.Models.AppUser", "AppUser")
-                        .WithMany("Categories")
+                        .WithMany()
                         .HasForeignKey("AppUserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -358,7 +360,7 @@ namespace ContactBook.Migrations
             modelBuilder.Entity("ContactBook.Models.Contact", b =>
                 {
                     b.HasOne("ContactBook.Models.AppUser", "AppUser")
-                        .WithMany("Contacts")
+                        .WithMany()
                         .HasForeignKey("AppUserID");
 
                     b.Navigation("AppUser");
@@ -413,13 +415,6 @@ namespace ContactBook.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("ContactBook.Models.AppUser", b =>
-                {
-                    b.Navigation("Categories");
-
-                    b.Navigation("Contacts");
                 });
 #pragma warning restore 612, 618
         }
