@@ -34,23 +34,32 @@ namespace ContactBook.Controllers
 
         // GET: Contacts
         [Authorize]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int categoryId)
         {
 
             var contacts = new List<Contact>();
             string appUserId = _userManager.GetUserId(User);
 
             //return the UserId and its associated contacts and categories
-            AppUser appUser = _context.Users
+            AppUser? appUser = _context.Users
                                      .Include(c => c.Contacts)
                                      .ThenInclude(c => c.Categories)
                                      .FirstOrDefault(u => u.Id == appUserId);
 
             var categories = appUser.Categories;
 
-            contacts = appUser.Contacts.OrderBy(c => c.LastName)
-                                       .ThenBy(c => c.FirstName)
-                                       .ToList();
+            //
+            if (categoryId == 0)
+            {
+                contacts = appUser.Contacts.OrderBy(c => c.LastName)
+                                           .ThenBy(c => c.FirstName)
+                                           .ToList();
+            }else
+            {
+                //return contacts in this filter only
+                contacts = appUser.Categories.FirstOrDefault(c => c.Id == categoryId)
+                                   .Contacts.OrderBy(c => c.LastName).ThenBy(c => c.FirstName).ToList();
+            }
 
             ViewData["CategoryId"] = new SelectList(categories, "Id", "Name");
 
@@ -151,7 +160,7 @@ namespace ContactBook.Controllers
             {
                 return NotFound();
             }
-            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserID);
+            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Name", contact.AppUserID);
             return View(contact);
         }
 
@@ -187,7 +196,7 @@ namespace ContactBook.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserID);
+            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Name", contact.AppUserID);
             return View(contact);
         }
 
@@ -225,14 +234,14 @@ namespace ContactBook.Controllers
             {
                 _context.Contacts.Remove(contact);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool ContactExists(int id)
         {
-          return (_context.Contacts?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Contacts?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
