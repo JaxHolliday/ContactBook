@@ -66,6 +66,41 @@ namespace ContactBook.Controllers
             return View(contacts);
         }
 
+        [Authorize]
+        public IActionResult SearchContacts(string searchString)
+        {
+            //list of contacts based on userid then by search
+            string appUserId = _userManager.GetUserId(User);
+            var contacts = new List<Contact>();
+
+            AppUser appUser = _context.Users
+                                      .Include(c => c.Contacts)
+                                      .ThenInclude(c => c.Categories)
+                                      .FirstOrDefault(u => u.Id == appUserId);
+
+            //test if they have put in searchstring or not 
+            if (String.IsNullOrEmpty(searchString))
+            {
+                contacts = appUser.Contacts
+                                  .OrderBy(c => c.LastName)
+                                  .ThenBy(c => c.FirstName)
+                                  .ToList();
+            }
+            else
+            {
+                //filter by fullname
+                contacts = appUser.Contacts.Where(c => c.FullName!.ToLower().Contains(searchString.ToLower()))
+                                  .OrderBy(c => c.LastName)
+                                  .ThenBy(c => c.FirstName)
+                                  .ToList();
+            }
+
+            ViewData["CategoryId"] = new SelectList(appUser.Categories, "Id", "Name", 0);
+            //returns to the index page w/ contacts model
+            return View(nameof(Index), contacts);
+
+        }
+
         // GET: Contacts/Details/5
         [Authorize]
         public async Task<IActionResult> Details(int? id)
