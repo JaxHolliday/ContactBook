@@ -181,6 +181,8 @@ namespace ContactBook.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+
         // GET: Contacts/Edit/5
         [Authorize]
         public async Task<IActionResult> Edit(int? id)
@@ -190,12 +192,20 @@ namespace ContactBook.Controllers
                 return NotFound();
             }
 
-            var contact = await _context.Contacts.FindAsync(id);
+            string appUserId = _userManager.GetUserId(User);
+
+            //var contact = await _context.Contacts.FindAsync(id);
+            //look up contact
+            var contact = await _context.Contacts.Where(c => c.Id == id && c.AppUserID == appUserId)
+                                                 .FirstOrDefaultAsync();
+
             if (contact == null)
             {
                 return NotFound();
             }
-            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Name", contact.AppUserID);
+
+            ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>().ToList());
+
             return View(contact);
         }
 
