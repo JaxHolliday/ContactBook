@@ -61,10 +61,13 @@ namespace ContactPro.Services
         {
             try
             {
-                //grabbing contacts and include cats that the id is in then filter
+                //grabbing contact and include cats that the id is in then filter
+                //including contacts for category ==> return first element that satifies [first found match]
                 var contact = await _context.Contacts.Include(c => c.Categories)
                                                      .FirstOrDefaultAsync(c => c.Id == contactId);
 
+                //create list of integers then return
+                //select statement to just pull back id then turn into list
                 List<int> categoryIds = contact!.Categories.Select(c => c.Id).ToList();
                 return categoryIds;
             }
