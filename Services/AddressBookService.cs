@@ -46,6 +46,7 @@ namespace ContactPro.Services
         {
             try
             {
+                //return categories based on the id 
                 Contact? contact = await _context.Contacts.Include(c => c.Categories).FirstOrDefaultAsync(c => c.Id == contactId);
                 return contact!.Categories;
             }
@@ -117,6 +118,7 @@ namespace ContactPro.Services
             {
                 if (await IsContactInCategory(categoryId, contactId))
                 {
+                    //finding id's for both
                     Contact? contact = await _context.Contacts.FindAsync(contactId);
                     Category? category = await _context.Categories.FindAsync(categoryId);
 
