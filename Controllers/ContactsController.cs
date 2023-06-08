@@ -12,6 +12,7 @@ using ContactBook.Models;
 using ContactBook.Enums;
 using ContactBook.Services.Interfaces;
 using ContactPro.Services.Interfaces;
+using ContactBook.Models.ViewModels;
 
 namespace ContactBook.Controllers
 {
@@ -99,6 +100,36 @@ namespace ContactBook.Controllers
             //returns to the index page w/ contacts model
             return View(nameof(Index), contacts);
 
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EmailContact(int Id)
+        {
+
+            string appUserId = _userManager.GetUserId(User);
+            Contact? contact = await _context.Contacts.Where(c => c.Id == Id && c.AppUserID == appUserId)
+                                                     .FirstOrDefaultAsync();
+            if (contact == null)
+            {
+                return NotFound();
+            }
+
+            //creates new obj for us
+            EmailData emailData = new EmailData()
+            {
+                EmailAddress = contact.Email,
+                FirstName = contact.FirstName,
+                LastName = contact.LastName
+            };
+
+            //viewmodels come from multiple data sets
+            EmailContactViewModel model = new EmailContactViewModel()
+            {
+                Contact = contact,
+                EmailData = emailData
+            };
+
+            return View(model);
         }
 
         // GET: Contacts/Details/5
