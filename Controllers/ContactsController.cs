@@ -47,7 +47,7 @@ namespace ContactBook.Controllers
                                      .ThenInclude(c => c.Categories)
                                      .FirstOrDefault(u => u.Id == appUserId);
 
-            var categories = appUser.Categories;
+            var categories = appUser!.Categories;
 
             //
             if (categoryId == 0)
