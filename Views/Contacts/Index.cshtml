@@ -72,5 +72,27 @@
     </div>
 </div>
 
+@*Sweet alets JS plugin will be in shared layout, redirect will be here *@
 
+@section scripts{
+    <!--Sweet Alerts-->
+    <script>
+        let message = '@(ViewBag.SwalMessage)';
 
+        if (!message.includes("Error") && message != '') {
+            Swal.fire({
+                backdrop: false,
+                icon: 'success',
+                title: message,
+                showConfirmButton: true
+            })
+        } else if (message.includes("Error")) {
+            Swal.fire({
+                backdrop: false,
+                icon: 'error',
+                title: 'Oops...',
+                text: message
+            })
+        }
+    </script>
+    }
