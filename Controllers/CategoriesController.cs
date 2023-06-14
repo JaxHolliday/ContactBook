@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ContactBook.Data;
 using ContactBook.Models;
+using ContactBook.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
@@ -15,18 +16,27 @@ namespace ContactBook.Controllers
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
-        public CategoriesController(ApplicationDbContext context)
+
+        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Categories
         [Authorize]
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Categories.Include(c => c.AppUser);
-            return View(await applicationDbContext.ToListAsync());
+            string appUserId = _userManager.GetUserId(User);
+
+            //made name more meaningful than just appdbcontext
+            //ensuring our appuser is filtered out 
+            var categories = _context.Categories.Where(c => c.AppUserID == appUserId)
+                                     .Include(c => c.AppUser)
+                                     .ToList();
+            return View(categories);
         }
 
         // GET: Categories/Details/5

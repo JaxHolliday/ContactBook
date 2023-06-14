@@ -38,7 +38,7 @@ namespace ContactBook.Controllers
 
         // GET: Contacts
         [Authorize]
-        public async Task<IActionResult> Index(int categoryId, string swalMessage == null)
+        public async Task<IActionResult> Index(int categoryId, string swalMessage = null)
         {
             ViewData["SwalMessage"] = swalMessage;
 
