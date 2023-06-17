@@ -63,7 +63,7 @@ namespace ContactBook.Controllers
         [Authorize]
         public IActionResult Create()
         {
-            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Id");
+
             return View();
         }
 
@@ -74,13 +74,18 @@ namespace ContactBook.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,AppUserID,Name")] Category category)
         {
+            //remove from model then add back in b4 we save it 
+            ModelState.Remove("AppUserId");
+
             if (ModelState.IsValid)
             {
+                string appUserId = _userManager.GetUserId(User);
+                category.AppUserID = appUserId;
                 _context.Add(category);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Id", category.AppUserID);
+
             return View(category);
         }
 
