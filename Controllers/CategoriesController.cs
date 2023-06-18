@@ -39,6 +39,37 @@ namespace ContactBook.Controllers
             return View(categories);
         }
 
+        [Authorize]
+        public async Task<IActionResult> EmailCategory(int id)
+        {
+            string appUserId = _userManager.GetUserId(User);
+
+            //return category where looking for and no email bombing of wrong categories 
+            Category? category = await _context.Categories
+                                              .Include(c => c.Contacts)
+                                              .FirstOrDefaultAsync(c => c.Id == id && c.AppUserID == appUserId);
+            //only contacts in specific category 
+            List<string> emails = category.Contacts.Select(c => c.Email).ToList();
+
+            EmailData emailData = new EmailData()
+            {
+                GroupName = category.Name,
+                //converts to 1 string from this array
+                EmailAddress = string.Join(",", emails),
+                //{} allow for the C# dot notation
+                Subject = $"Group Message: {category.Name}"
+            };
+
+            EmailCategoryViewModel model = new EmailCategoryViewModel()
+            {
+                Contacts = category.Contacts.ToList(),
+                EmailData = emailData
+            };
+            
+            //return view w/ data collected from the model
+            return View(model);
+        }
+
         // GET: Categories/Details/5
         [Authorize]
         public async Task<IActionResult> Details(int? id)
