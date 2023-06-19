@@ -10,6 +10,7 @@ using ContactBook.Models;
 using ContactBook.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace ContactBook.Controllers
 {
@@ -17,18 +18,21 @@ namespace ContactBook.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailService;
 
 
-        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager, IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // GET: Categories
         [Authorize]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? swalMessage = null)
         {
+            ViewData["SwalMessage"] = swalMessage;
             string appUserId = _userManager.GetUserId(User);
 
             //made name more meaningful than just appdbcontext
@@ -65,9 +69,33 @@ namespace ContactBook.Controllers
                 Contacts = category.Contacts.ToList(),
                 EmailData = emailData
             };
-            
+
             //return view w/ data collected from the model
             return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> EmailCategory(EmailCategoryViewModel ecvm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {                
+                    //gather our info
+                    await _emailService.SendEmailAsync(ecvm.EmailData.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
+                    //View ==> Controller
+                    return RedirectToAction("Index", "Categories", new { swalMessage = "Success: Email Sent" });
+                }
+                catch (Exception)
+                {
+                    return RedirectToAction("Index", "Categories", new { swalMessage = "Error: Email failed to send" });
+
+                    throw;
+                }
+            }
+
+            return View(ecvm);
         }
 
         // GET: Categories/Details/5
@@ -216,14 +244,14 @@ namespace ContactBook.Controllers
             {
                 _context.Categories.Remove(category);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool CategoryExists(int id)
         {
-          return (_context.Categories?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Categories?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
