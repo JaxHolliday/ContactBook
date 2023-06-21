@@ -44,6 +44,8 @@ else
     app.UseHsts();
 }
 
+//custom error Handle
+app.UseStatusCodePagesWithReExecute("/Home/HandleError/{0}");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
